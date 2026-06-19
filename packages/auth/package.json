@@ -1,0 +1,21 @@
+{
+  "name": "@code-royale/auth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^22.15.3",
+    "better-auth": "1.6.15",
+    "@code-royale/db":"workspace:*",
+    "@repo/typescript-config":"workspace:*"
+  },
+  "exports":{
+    ".":"./src/auth.ts"
+  }
+}
