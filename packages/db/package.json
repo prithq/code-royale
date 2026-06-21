@@ -7,7 +7,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "seed":"tsx src/seed.ts"
   },
   "keywords": [],
   "author": "",
@@ -18,10 +19,10 @@
     "@types/node": "^22.15.3",
     "dotenv": "^17.4.2",
     "pg": "^8.21.0",
-    "prisma": "6.5.0"
+    "prisma": "6.5.0",
+    "tsx": "^4.22.4"
   },
-
-  "exports":{
-    ".":"./src/index.ts"
+  "exports": {
+    ".": "./src/index.ts"
   }
 }

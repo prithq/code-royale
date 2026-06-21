@@ -2,7 +2,7 @@
   "name": "@code-royale/auth",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "types": "./src/auth.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,6 +16,6 @@
     "@repo/typescript-config":"workspace:*"
   },
   "exports":{
-    ".":"./src/auth.ts"
+    ".":"./src/index.ts"
   }
 }

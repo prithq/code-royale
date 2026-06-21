@@ -9,6 +9,63 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum MatchMode {
+  QUICKPLAY
+  FRIEND_ROOM
+}
+
+enum MatchStatus {
+  WAITING
+  ACTIVE
+  FINISHED
+}
+model Problem {
+  id          String     @id @default(cuid())
+  title       String
+  description String     @db.Text
+  category    String
+  difficulty  Difficulty
+  createdAt   DateTime   @default(now())
+
+  testCases     TestCase[]
+  matchProblems MatchProblem[]
+  submissions   Submission[]
+
+  @@map("problem")
+}
+model Submission {
+  id        String   @id @default(cuid())
+  matchId   String
+  problemId String
+  userId    String
+  code      String   @db.Text
+  language  String
+  passed    Boolean
+  runtimeMs Int?
+  createdAt DateTime @default(now())
+
+  problem Problem @relation(fields: [problemId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("submission")
+}
+model TestCase {
+  id        String  @id @default(cuid())
+  problemId String
+  input     String  @db.Text
+  expected  String  @db.Text
+  isHidden  Boolean @default(false)
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@map("test_case")
+}
 
 model User {
   id            String    @id
@@ -21,7 +78,10 @@ model User {
   sessions      Session[]
   accounts      Account[]
  
-
+  rating        Int            @default(1000)
+  matchPlayers  MatchPlayer[]
+  submissions   Submission[]
+  hostedMatches Match[]        @relation("HostedMatches")
 
   @@unique([email])
   @@map("user")
@@ -73,4 +133,54 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+model MatchPlayer {
+  id           String   @id @default(cuid())
+  matchId      String
+  userId       String
+  score        Int      @default(0)
+  finalRank    Int?
+  ratingBefore Int?
+  ratingAfter  Int?
+  joinedAt     DateTime @default(now())
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, userId])
+  @@map("match_player")
+}
+
+
+model MatchProblem {
+  id        String @id @default(cuid())
+  matchId   String
+  problemId String
+  order     Int
+
+  match   Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id])
+
+  @@unique([matchId, problemId])
+  @@map("match_problem")
+}
+
+model Match {
+  id            String      @id @default(cuid())
+  mode          MatchMode
+  status        MatchStatus @default(WAITING)
+  roomCode      String?     @unique
+  hostId        String?
+  category      String[]    @default([])
+  questionCount Int         @default(3)
+  durationSec   Int         @default(900)
+  startedAt     DateTime?
+  endedAt       DateTime?
+  createdAt     DateTime    @default(now())
+
+  host     User?          @relation("HostedMatches", fields: [hostId], references: [id])
+  players  MatchPlayer[]
+  problems MatchProblem[]
+
+  @@map("match")
 }
