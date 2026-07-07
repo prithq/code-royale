@@ -1,39 +1,27 @@
-import express from "express";
-import http from "http";
 import { Server } from "socket.io";
+import {Server as HttpServer} from "http"
+import { socketAuthMiddleware } from "./middleware";
+import { registerQueueHandlers } from "./handlers/queue.handler";
+import { registerRoomHandlers } from "./handlers/room.handler";
+export function createSocketServer(httpServer:HttpServer){
+  const io=new Server(httpServer,{
+    cors:{
+      origin:"http://localhost:3000",
+      credentials:true
+    }
+  })
 
-const app = express();
+  io.use(socketAuthMiddleware)
 
-const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
-  },
-});
-
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
-
-  socket.emit("welcome", "Connected to server");
-
-  socket.on("message", (data) => {
-    console.log("Received:", data);
-
-    // send to all connected clients
-    io.emit("message", data);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
-});
-
-app.get("/", (req, res) => {
-  res.send("Socket.IO Server Running");
-});
-
-server.listen(3000, () => {
-  console.log("Server running on port 3000");
-});
+  io.on("connection",(socket)=>{
+    console.log(`User connected: ${socket.data.user.name} (${socket.id})`);
+  
+        registerQueueHandlers(io, socket);
+    registerRoomHandlers(io, socket);
+    socket.on("disconnect", (reason) => {
+      console.log(`User disconnected: ${socket.data.user.name} — ${reason}`);
+    });
+  
+  
+  })
+}
