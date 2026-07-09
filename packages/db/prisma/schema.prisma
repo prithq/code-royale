@@ -29,7 +29,7 @@ model Problem {
   id          String     @id @default(cuid())
   title       String
   description String     @db.Text
-  category    String
+  categories    String[]  @default([])
   difficulty  Difficulty
   createdAt   DateTime   @default(now())
 
@@ -171,7 +171,7 @@ model Match {
   status        MatchStatus @default(WAITING)
   roomCode      String?     @unique
   hostId        String?
-  category      String[]    @default([])
+  categories      String[]    @default([])
   questionCount Int         @default(3)
   durationSec   Int         @default(900)
   startedAt     DateTime?

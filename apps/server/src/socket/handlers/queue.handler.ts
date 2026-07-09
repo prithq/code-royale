@@ -50,7 +50,7 @@ async function tryMatch(io:AppServer){
             data:{
                 mode:"QUICKPLAY",
                 status:"WAITING",
-                category:DEFAULT_CATEGORIES,
+                categories:DEFAULT_CATEGORIES,
                 questionCount: DEFAULT_QUESTION_COUNT,
                 durationSec: DEFAULT_DURATION_SEC,
                 players:{

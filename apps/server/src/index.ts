@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "@code-royale/auth";
 import { createSocketServer } from "./socket";
+import routes from "./routes/index";
 const app = express();
 const server = http.createServer(app);
 
@@ -21,6 +22,7 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 
 
 app.use(express.json());
+app.use("/api", routes);
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });

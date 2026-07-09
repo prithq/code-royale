@@ -104,7 +104,7 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket) {
         matchId: match.id,
         roomCode: match.roomCode!,
         players: allPlayers,
-        categories: match.category,
+        categories: match.categories,
         questionCount: match.questionCount,
         durationSec: match.durationSec,
       });
@@ -150,7 +150,7 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket) {
         matchId: match.id,
         roomCode: match.roomCode!,
         players: match.players.map((p) => ({ id: p.user.id, name: p.user.name })),
-        categories: match.category,
+        categories: match.categories,
         questionCount: match.questionCount,
         durationSec: match.durationSec,
       });
