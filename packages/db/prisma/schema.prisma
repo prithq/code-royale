@@ -30,6 +30,7 @@ model Problem {
   title       String
   description String     @db.Text
   categories    String[]  @default([])
+  harness     String     @db.Text
   difficulty  Difficulty
   createdAt   DateTime   @default(now())
 

@@ -1,6 +1,6 @@
 import { Server,Socket } from "socket.io";
 import {prisma} from "@code-royale/db"
-
+import { startMatch } from "./match.handler";
 import { ServerToClientEvents,ClientToServerEvents,MatchFoundPayload } from "@code-royale/shared-types";
 
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
@@ -30,13 +30,10 @@ if(index!==-1){
     
 }
 
-
-
 }
 
 
 async function tryMatch(io:AppServer){
-
 
 
     if(queue.length<MATCH_SIZE)
@@ -81,7 +78,8 @@ async function tryMatch(io:AppServer){
                 socket.emit("match_found",payload)
             }
         }
-
+        await startMatch(io, payload);
+        
         console.log(`Match created: ${match.id}`);
 
     }catch(err){

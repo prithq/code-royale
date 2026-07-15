@@ -9,6 +9,7 @@ import {
   MatchFoundPayload,
 } from "@code-royale/shared-types";
 import { nanoid } from "nanoid";
+import { startMatch } from "./match.handler";
 
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -126,41 +127,45 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket) {
 
   // ── Start match (host only) ───────────────
   socket.on("start_match", async () => {
-    try {
-      const matchId = socketRoomMap.get(socket.id);
-      if (!matchId) {
-        socket.emit("room_error", "You are not in a room");
-        return;
-      }
-
-      const match = await prisma.match.findUnique({
-        where: { id: matchId },
-        include: {
-          players: {
-            include: { user: { select: { id: true, name: true } } },
-          },
-        },
-      });
-
-      if (!match) { socket.emit("room_error", "Room not found"); return; }
-      if (match.hostId !== socket.data.user.id) { socket.emit("room_error", "Only the host can start"); return; }
-      if (match.players.length < 2) { socket.emit("room_error", "Need at least 2 players"); return; }
-
-      io.to(matchId).emit("match_starting", {
-        matchId: match.id,
-        roomCode: match.roomCode!,
-        players: match.players.map((p) => ({ id: p.user.id, name: p.user.name })),
-        categories: match.categories,
-        questionCount: match.questionCount,
-        durationSec: match.durationSec,
-      });
-
-      console.log(`Match starting: ${matchId}`);
-    } catch (err) {
-      console.error(err);
-      socket.emit("room_error", "Failed to start match");
+  try {
+    const matchId = socketRoomMap.get(socket.id);
+    if (!matchId) {
+      socket.emit("room_error", "You are not in a room");
+      return;
     }
-  });
+
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      include: {
+        players: {
+          include: { user: { select: { id: true, name: true } } },
+        },
+      },
+    });
+
+    if (!match) { socket.emit("room_error", "Room not found"); return; }
+    if (match.hostId !== socket.data.user.id) { socket.emit("room_error", "Only the host can start"); return; }
+    if (match.players.length < 2) { socket.emit("room_error", "Need at least 2 players"); return; }
+
+    // store in variable so we can pass it to startMatch
+    const payload = {
+      matchId: match.id,
+      roomCode: match.roomCode!,
+      players: match.players.map((p) => ({ id: p.user.id, name: p.user.name })),
+      categories: match.categories,
+      questionCount: match.questionCount,
+      durationSec: match.durationSec,
+    };
+
+    io.to(matchId).emit("match_starting", payload);
+    await startMatch(io, payload); 
+
+    console.log(`Match starting: ${matchId}`);
+  } catch (err) {
+    console.error(err);
+    socket.emit("room_error", "Failed to start match");
+  }
+});
 
   // ── Leave / disconnect cleanup ────────────
   socket.on("leave_room", () => handleLeaveRoom(socket, io));

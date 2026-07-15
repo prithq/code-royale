@@ -147,6 +147,7 @@ export function registerMatchHandlers(io: any, socket: any) {
         const { passed, runtimeMs } = await runAllTestCases(
           code,
           language,
+          matchProblem.problem.harness, 
           matchProblem.problem.testCases.map((tc) => ({
             input: tc.input,
             expected: tc.expected,
