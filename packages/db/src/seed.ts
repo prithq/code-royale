@@ -59,7 +59,7 @@ lines.on('data', d => input += d);
 lines.on('end', () => {
   const nums = input.trim().split(',').map(Number);
   const result = reverseList(nums);
-  console.log(result.join(','));
+  process.stdout.write(result.join(','));
 });`,
       testCases: [
         { input: "1,2,3,4,5", expected: "5,4,3,2,1", isHidden: false },

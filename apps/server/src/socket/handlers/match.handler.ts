@@ -1,8 +1,6 @@
 import { prisma } from "@code-royale/db";
 import { selectProblems, computeLeaderboard } from "../../services/match.service";
 import { runAllTestCases } from "../../services/judge0.service";
-import { arch } from "os";
-import { log } from "console";
 
 const activeTimers:Record<string,NodeJS.Timeout>={}
 const solvedCount:Record<string,number>={}
@@ -42,7 +40,7 @@ export async function startMatch(io:any,payload:any){
         secondsLeft--
 
         if(secondsLeft%10===0 || secondsLeft<=10)
-            io.to(matchId).emit("timer",secondsLeft)
+            io.to(matchId).emit("timer_tick",secondsLeft)
 
         if(secondsLeft<=0){
             clearInterval(timer)
@@ -112,16 +110,18 @@ export function registerMatchHandlers(io: any, socket: any) {
     "submit_code",
     async ({ matchId, problemId, code, language }: any) => {
       try {
+        console.log("1. received submit_code:", JSON.stringify(code));
         const match = await prisma.match.findUnique({
           where: { id: matchId },
           include: { players: true, problems: true },
         });
-
+        console.log("2. match status:", match?.status);
         if (!match || match.status !== "ACTIVE") return;
 
         const isPlayer = match.players.some(
           (p) => p.userId === socket.data.user.id
         );
+        console.log("4. isPlayer:", isPlayer);
         if (!isPlayer) return;
 
         const alreadySolved = await prisma.submission.findFirst({
@@ -132,6 +132,7 @@ export function registerMatchHandlers(io: any, socket: any) {
             passed: true,
           },
         });
+        console.log("5. alreadySolved:", alreadySolved);
         if (alreadySolved) return;
 
         const matchProblem = await prisma.matchProblem.findFirst({
@@ -142,17 +143,22 @@ export function registerMatchHandlers(io: any, socket: any) {
             },
           },
         });
+        console.log("6. matchProblem found:", !!matchProblem);
         if (!matchProblem) return;
-
+console.log("7. sending to Judge0...");
         const { passed, runtimeMs } = await runAllTestCases(
           code,
+          matchProblem.problem.harness,
           language,
-          matchProblem.problem.harness, 
+           
           matchProblem.problem.testCases.map((tc) => ({
             input: tc.input,
             expected: tc.expected,
-          }))
+          })),
+          
+          
         );
+        console.log("8. Judge0 result:", { passed, runtimeMs });
 
         await prisma.submission.create({
           data: {

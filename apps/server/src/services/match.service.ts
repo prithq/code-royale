@@ -18,7 +18,6 @@ export async function selectProblems(categories:string[],count:number) {
 
 
 
-
     if(problems.length===0)
         throw new Error("no problems found for selected categories")
 

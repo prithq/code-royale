@@ -3,10 +3,6 @@ import { prisma } from "@code-royale/db";
 import {
   ServerToClientEvents,
   ClientToServerEvents,
-  RoomCreatedPayload,
-  RoomJoinedPayload,
-  PlayerJoinedPayload,
-  MatchFoundPayload,
 } from "@code-royale/shared-types";
 import { nanoid } from "nanoid";
 import { startMatch } from "./match.handler";
@@ -19,7 +15,7 @@ const socketRoomMap = new Map<string, string>();
 
 export function registerRoomHandlers(io: AppServer, socket: AppSocket) {
 
-  // ── Create room ──────────────────────────
+
   socket.on("create_room", async ({ categories, questionCount, durationSec }) => {
     try {
       const roomCode = nanoid(6).toUpperCase();
@@ -55,7 +51,7 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket) {
     }
   });
 
-  // ── Join room ─────────────────────────────
+
   socket.on("join_room", async ({ roomCode }) => {
     try {
       const match = await prisma.match.findUnique({
@@ -125,7 +121,7 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket) {
     }
   });
 
-  // ── Start match (host only) ───────────────
+  
   socket.on("start_match", async () => {
   try {
     const matchId = socketRoomMap.get(socket.id);
@@ -147,7 +143,7 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket) {
     if (match.hostId !== socket.data.user.id) { socket.emit("room_error", "Only the host can start"); return; }
     if (match.players.length < 2) { socket.emit("room_error", "Need at least 2 players"); return; }
 
-    // store in variable so we can pass it to startMatch
+   
     const payload = {
       matchId: match.id,
       roomCode: match.roomCode!,

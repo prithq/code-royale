@@ -1,4 +1,3 @@
-const JUDGE0_URL = process.env.JUDGE0_API_URL!;
 
 const LANGUAGE_IDS: Record<string, number> = {
   javascript: 63,
@@ -13,20 +12,23 @@ function sleep(ms: number) {
 }
 
 async function runCode(
-  playerCode: string,
-  harness: string,
+  code: string,
   language: string,
   input: string,
-  expected: string
+  expected: string,
+  harness: string
 ) {
+
+ 
+  const JUDGE0_URL = process.env.JUDGE0_API_URL!;
   const languageId = LANGUAGE_IDS[language];
   if (!languageId) throw new Error(`Unsupported language: ${language}`);
 
-  // combine player's function + harness
-  const fullCode = `${playerCode}\n\n${harness}`;
+  const fullCode = `${code}\n\n${harness}`;
 
-  const submitRes = await fetch(
-    `${JUDGE0_URL}/submissions?base64_encoded=false&wait=false`,
+  // use wait=true — synchronous, no polling needed
+  const res = await fetch(
+    `${JUDGE0_URL}/submissions?base64_encoded=false&wait=true`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -39,39 +41,30 @@ async function runCode(
     }
   );
 
-  const { token } = await submitRes.json();
+  const result = await res.json();
+  console.log("Judge0 raw result:", JSON.stringify(result));
 
-  for (let i = 0; i < 10; i++) {
-    await sleep(1500);
-
-    const resultRes = await fetch(
-      `${JUDGE0_URL}/submissions/${token}?base64_encoded=false`
-    );
-    const result = await resultRes.json();
-
-    if (result.status.id <= 2) continue;
-
-    return {
-      passed: result.status.id === 3,
-      runtimeMs: result.time
-        ? Math.round(parseFloat(result.time) * 1000)
-        : null,
-    };
-  }
-
-  return { passed: false, runtimeMs: null };
+  return {
+    passed: result.status?.id === 3,
+    runtimeMs: result.time
+      ? Math.round(parseFloat(result.time) * 1000)
+      : null,
+  };
 }
 
 export async function runAllTestCases(
-  playerCode: string,
+  code: string,
   harness: string,
   language: string,
-  testCases: { input: string; expected: string }[]
+  testCases: { input: string; expected: string }[],
+  
 ) {
   for (const tc of testCases) {
-    const result = await runCode(playerCode, harness, language, tc.input, tc.expected);
+    const result = await runCode(code, language, tc.input, tc.expected, harness);
     if (!result.passed) {
-      return { passed: false, runtimeMs: result.runtimeMs };
+      return { 
+        passed: false, runtimeMs: result.runtimeMs 
+      };
     }
   }
   return { passed: true, runtimeMs: null };
