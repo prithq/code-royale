@@ -2,7 +2,7 @@ import { Server,Socket } from "socket.io";
 import {prisma} from "@code-royale/db"
 import { startMatch } from "./match.handler";
 import { ServerToClientEvents,ClientToServerEvents,MatchFoundPayload } from "@code-royale/shared-types";
-
+import { isRateLimited } from "../../middleware/socketRateLimiter";
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
@@ -94,7 +94,10 @@ async function tryMatch(io:AppServer){
     
 export function registerQueueHandlers(io:AppServer,socket:AppSocket){
     socket.on("join_queue",async ()=>{
-        
+    if(isRateLimited(socket.id, "join_queue", 5, 60 * 1000)) {
+    socket.emit("queue_error", "Too many requests — slow down");
+    return;
+  }
      const alreadyQueued = queue.find((p) => p.socketId === socket.id);
 
       if (alreadyQueued) {

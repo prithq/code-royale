@@ -8,7 +8,8 @@ import { auth } from "@code-royale/auth";
 import { createSocketServer } from "./socket";
 import routes from "./routes/index";
 import dotenv from "dotenv";
-
+import { authLimiter } from "./middleware/rate-limiter";
+import { apiLimiter } from "./middleware/rate-limiter";
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
@@ -20,11 +21,13 @@ app.use(
     credentials: true,
   })
 );
-
+app.use("/api/auth", authLimiter);
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
 
 app.use(express.json());
+app.use("/api", apiLimiter);
+
 app.use("/api", routes);
 
 app.get("/health", (req, res) => {

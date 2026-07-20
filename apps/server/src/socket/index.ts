@@ -4,7 +4,7 @@ import { socketAuthMiddleware } from "./middleware";
 import { registerQueueHandlers } from "./handlers/queue.handler";
 import { registerRoomHandlers } from "./handlers/room.handler";
 import { registerMatchHandlers } from "./handlers/match.handler";
-
+import { clearSocketBuckets } from "../middleware/socketRateLimiter";
 export function createSocketServer(httpServer: HttpServer) {
   const io = new Server(httpServer, {
     cors: {
@@ -24,6 +24,8 @@ export function createSocketServer(httpServer: HttpServer) {
 
     socket.on("disconnect", (reason) => {
       console.log(`User disconnected: ${socket.data.user.name} — ${reason}`);
+
+      clearSocketBuckets(socket.id)
     });
   });
 

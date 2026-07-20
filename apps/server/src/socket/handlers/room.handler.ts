@@ -6,7 +6,7 @@ import {
 } from "@code-royale/shared-types";
 import { nanoid } from "nanoid";
 import { startMatch } from "./match.handler";
-
+import { isRateLimited } from "../../middleware/socketRateLimiter";
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
@@ -18,6 +18,11 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket) {
 
   socket.on("create_room", async ({ categories, questionCount, durationSec }) => {
     try {
+
+    if (isRateLimited(socket.id, "create_room", 5, 60 * 1000)) {
+    socket.emit("room_error", "Too many requests — slow down");
+    return;
+  }
       const roomCode = nanoid(6).toUpperCase();
 
       const match = await prisma.match.create({
@@ -54,6 +59,11 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket) {
 
   socket.on("join_room", async ({ roomCode }) => {
     try {
+
+      if(isRateLimited(socket.id, "join_room", 10, 60 * 1000)) {
+    socket.emit("room_error", "Too many requests — slow down");
+    return;
+  }
       const match = await prisma.match.findUnique({
         where: { roomCode },
         include: {

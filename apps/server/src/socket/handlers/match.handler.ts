@@ -1,7 +1,7 @@
 import { prisma } from "@code-royale/db";
 import { selectProblems, computeLeaderboard } from "../../services/match.service";
 import { runAllTestCases } from "../../services/judge0.service";
-
+import { isRateLimited } from "../../middleware/socketRateLimiter";
 const activeTimers:Record<string,NodeJS.Timeout>={}
 const solvedCount:Record<string,number>={}
 
@@ -110,6 +110,14 @@ export function registerMatchHandlers(io: any, socket: any) {
     "submit_code",
     async ({ matchId, problemId, code, language }: any) => {
       try {
+
+        if (isRateLimited(socket.id, "submit_code", 10, 60 * 1000)) {
+    socket.emit("submission_failed", {
+      problemId,
+      message: "Too many submissions — wait a moment",
+    });
+    return;
+  }
         console.log("1. received submit_code:", JSON.stringify(code));
         const match = await prisma.match.findUnique({
           where: { id: matchId },
