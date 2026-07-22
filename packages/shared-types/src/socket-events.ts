@@ -62,6 +62,8 @@ export interface ServerToClientEvents {
   room_settings_updated: (payload: RoomSettingsUpdatedPayload) => void;
   room_error: (message: string) => void;
   match_starting: (payload: MatchFoundPayload) => void;
+
+submission_queued: (payload: { problemId: string; message: string }) => void
 }
 
 export interface ClientToServerEvents {
@@ -84,3 +86,5 @@ export interface ClientToServerEvents {
   }) => void;
   start_match: () => void;
 }
+
+

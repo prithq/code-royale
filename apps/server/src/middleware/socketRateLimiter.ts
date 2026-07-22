@@ -3,7 +3,6 @@ type BucketEntry={
     resetAt:number
 }
 
-
 //the key is socketID:eventname
 const buckets:Record<string,BucketEntry>={}
 
@@ -19,9 +18,6 @@ setInterval(()=>{
     }
 
 },5*60*1000)
-
-
-
 
 export function isRateLimited(
     socketId:string,
@@ -49,7 +45,6 @@ export function isRateLimited(
 
     return false
 }
-
 
 // for socket disconnection
 export function clearSocketBuckets(socketId: string) {

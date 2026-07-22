@@ -16,6 +16,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "better-auth": "^1.6.15",
+    "bullmq": "^5.80.10",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
